@@ -1,1 +1,16 @@
-/* You can add global styles to this file, and also import other style files */
+@import "~bootstrap/dist/css/bootstrap.css";
+@import "../node_modules/bootstrap/dist/css/bootstrap.css";
+
+
+body{
+    background-color:  	#EAEDED;
+    padding-top: 28px;
+    margin-left: -12px;
+}
+li{
+   cursor: pointer;
+}
+.nav-item:hover{
+  background-color: rgb(255,255,255,0.3);
+  border-radius: 5px;
+}
