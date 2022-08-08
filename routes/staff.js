@@ -3,12 +3,13 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const { pool } = require('../config/dbConnection');
+const jwt = require('jsonwebtoken');
 
 router.post('/', async (req, res) => {
 
     const { email, password } = req.body;
     try {
-        const staff = await pool.query(`SELECT * FROM userRoles WHERE email= $1;`, [email])
+        const staff = await pool.query(`SELECT * FROM staff WHERE email= $1;`, [email])
         const role = staff.rows[0].role;
 
         if (staff.rows.length === 0) {
@@ -25,13 +26,19 @@ router.post('/', async (req, res) => {
             });
         } 
         else if (result === true) { 
-            // const sampleId = await pool.query(`SELECT * FROM sampleSubmission WHERE email= $1;`, [email])
             req.session.staffRole = role;
             req.session.staffId = staff.rows[0].staff_id;
+            
+            // const staffToken = jwt.sign({ id: staff.rows[0].staff_id, email: staff.rows[0].email, 
+            // role: staff.rows[0].role }, process.env.JWT_SECRET, { expiresIn: '60m' });
+            // console.log(staffToken);
+
             if(role === 'labTechnician'){
             // res.redirect('dashboardPage.ejs')
+            const assignedTechnician = pool.query(`SELECT * FROM sampleSubmission WHERE staff_id = $1`,[staff.rows[0].staff_id]);
+            req.session.technician = assignedTechnician.rows[0].labTechnician;
             res.status(200).json({
-                message: "Welcome labTechnician",
+                message: `Welcome ${staff.rows[0].name}`,
                 // token: token
                 });
                 console.log("Signed in successfully");
@@ -40,7 +47,7 @@ router.post('/', async (req, res) => {
                     
             // res.redirect('dashboardPage.ejs')
             res.status(200).json({
-                message: "Welcome seniorEngineer",
+                message: `Welcome ${staff.rows[0].name}`,
                 // token: token
                 });
                 console.log("Signed in successfully");
@@ -49,7 +56,7 @@ router.post('/', async (req, res) => {
                         
             // res.redirect('dashboardPage.ejs')
             res.status(200).json({
-                message: "Welcome RTDAManager",
+                message: `Welcome ${staff.rows[0].name}`,
                 // token: token
                 });
                 console.log("Signed in successfully");
@@ -60,7 +67,7 @@ router.post('/', async (req, res) => {
                     
                 // res.redirect('dashboardPage.ejs')
                 res.status(200).json({
-                    message: "Welcome labDirector",
+                    message: `Welcome ${staff.rows[0].name}`,
                     // token: token
                     });
                     console.log("Signed in successfully");
@@ -69,15 +76,21 @@ router.post('/', async (req, res) => {
             else if(role === 'admin'){
                         
                 // res.redirect('/staff/registration')
+            //     jwt.verify(staffToken, process.env.JWT_SECRET, (error, decodedToken) => {
+            //         if(error) {
+            //           return res.status(400).json({ message: 'Incorrect token or expired' })
+            //         }
+            //         console.log(decodedToken.role);
+            //    })
                 res.status(200).json({
-                    message: "Welcome Super Admin",
+                    message: `Welcome ${staff.rows[0].name}`,
                     // token: token
                     });
                     console.log("Signed in successfully");
                     // console.log(req.session);
                 }
             else{
-                res.status(200).json({
+                res.status(401).json({
                     message: "You are not authorized",
                     // token: token
                     });

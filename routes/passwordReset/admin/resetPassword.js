@@ -24,7 +24,7 @@ router.patch('/:token', async (req, res) => {
       } else {
           return res.status(400).json({ message: 'No token found' })
       }
-      const  user  =  await pool.query(`SELECT * FROM userRoles WHERE resetLink= $1;`, [resetToken]);
+      const  user  =  await pool.query(`SELECT * FROM staff WHERE resetPassword= $1;`, [resetToken]);
 
       if(user.rows.length  ===  0) {
         return res.status(400).json({ message: 'We could not find a match for this link' });
@@ -40,7 +40,7 @@ router.patch('/:token', async (req, res) => {
     }); 
         const salt = await bcrypt.genSalt();
         const hashedPswd = await bcrypt.hash(newPassword,salt);
-      await pool.query(`UPDATE userRoles SET password = $1, resetToken = NULL WHERE resetToken = $2`, [hashedPswd,resetToken] );
+      await pool.query(`UPDATE staff SET password = $1, resetPassword = NULL WHERE resetPassword = $2`, [hashedPswd,resetToken] );
       res.status(200).json({ message: 'Password updated' });
     } catch (error) {
       res.status(500).json({ 

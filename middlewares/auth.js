@@ -1,8 +1,4 @@
 
-const express = require('express');
-const bcrypt = require("bcrypt");
-const { pool } = require('../config/dbConnection');
-
 async function authUser(req, res, next) {
     try {
     if (! (req.session && req.session.userId)){

@@ -6,9 +6,10 @@ const { pool } = require('../config/dbConnection');
 const { adminSchema } = require('../middlewares/authSchema')
 const bcrypt = require('bcrypt');
 const { authStaff, authRole } = require('../middlewares/auth');
+const { authToken } = require('../middlewares/adminAuth');
 
 // routing using post to create a new staff
-router.post('/',authStaff, authRole('admin'), async (req, res) => {     
+router.post('/',authStaff, authRole('admin'), async (req, res) => {     //authStaff, authRole('admin')
     try {
         const { name,email,phone,password,confPassword,role } = req.body;
         await adminSchema.validateAsync(req.body,(err, result) => {
@@ -18,14 +19,14 @@ router.post('/',authStaff, authRole('admin'), async (req, res) => {
             }
         }); 
         
-        const  emailRow  =  await pool.query(`SELECT * FROM userRoles WHERE email= $1;`, [email]);
+        const  emailRow  =  await pool.query(`SELECT * FROM staff WHERE email= $1;`, [email]);
         if (emailRow.rows.length  !==  0) {
             // errors.push({ message: "Staff already registered." });
         return  res.status(400).json({
         Error: "Staff already registered.",
         });
         }
-        const  phoneRow  =  await pool.query(`SELECT * FROM userRoles WHERE phone= $1;`, [phone]);
+        const  phoneRow  =  await pool.query(`SELECT * FROM staff WHERE phone= $1;`, [phone]);
         if (phoneRow.rows.length  !==  0) {
             // errors.push({ message: "Phone number already registered." });
         return  res.status(400).json({
@@ -36,7 +37,7 @@ router.post('/',authStaff, authRole('admin'), async (req, res) => {
         const salt = await bcrypt.genSalt();
         const hashedPswd = await bcrypt.hash(password,salt);
         const insertQuery = await pool.query(
-        `INSERT INTO userRoles (name,email,phone,role,password) 
+        `INSERT INTO staff (name,email,phone,role,password) 
         VALUES('${name}','${email}','${phone}', '${role}','${hashedPswd}') RETURNING * `)
 
         res.status(200).send({ message: ` staff ${name}  added to database` });
@@ -54,7 +55,7 @@ router.post('/',authStaff, authRole('admin'), async (req, res) => {
 
 router.get('/',authStaff, authRole('admin'), async (req, res) => {   
     try {
-        const staff  =  await pool.query(`SELECT * FROM userRoles`);
+        const staff  =  await pool.query(`SELECT * FROM staff`);
         if (staff.rows != 0){
             res.status(200).send(staff.rows);
         } else {
@@ -70,7 +71,7 @@ router.get('/',authStaff, authRole('admin'), async (req, res) => {
 router.get('/:id',authStaff,authRole('admin'), async (req, res) => {   
     try {
         const idToReturn = parseInt(req.params.id)
-        const staffToReturn  =  await pool.query(`SELECT * FROM userRoles WHERE staff_id = $1`, [idToReturn]);
+        const staffToReturn  =  await pool.query(`SELECT * FROM staff WHERE staff_id = $1`, [idToReturn]);
         if(staffToReturn.rows != 0 ) {
             res.status(200).send(staffToReturn.rows);
             console.log(staffToReturn.rows);
@@ -100,15 +101,15 @@ router.put('/:id',authStaff,authRole('admin'), async (req,res) =>{
         const hashedPswd = await bcrypt.hash(password,salt);
 
         const idToUpdate = parseInt(req.params.id)
-        const staffToUpdate  =  await pool.query(`SELECT * FROM userRoles WHERE staff_id = $1`, [idToUpdate]);
+        const staffToUpdate  =  await pool.query(`SELECT * FROM staff WHERE staff_id = $1`, [idToUpdate]);
         if(staffToUpdate.rows != 0 ) {
             
-            await pool.query(`UPDATE userRoles SET 
+            await pool.query(`UPDATE staff SET 
             name = $1, email = $2, phone = $3, password = $4, role = $5 WHERE staff_id = $6`, 
             [ name,email,phone,hashedPswd,role, idToUpdate ] 
                 ); 
             
-            const updatedStaff  =  await pool.query(`SELECT * FROM userRoles WHERE staff_id = $1`, [idToUpdate]);
+            const updatedStaff  =  await pool.query(`SELECT * FROM staff WHERE staff_id = $1`, [idToUpdate]);
             res.status(200).send(updatedStaff.rows);
         }
         else {
@@ -124,10 +125,10 @@ router.put('/:id',authStaff,authRole('admin'), async (req,res) =>{
 router.delete('/:id',authStaff,authRole('admin'), async (req, res) => {   
     try {
         const idToDelete = parseInt(req.params.id)
-        const staffToDelete  =  await pool.query(`SELECT * FROM userRoles WHERE staff_id = $1`, [idToDelete]);
+        const staffToDelete  =  await pool.query(`SELECT * FROM staff WHERE staff_id = $1`, [idToDelete]);
         if(staffToDelete.rows != 0 ) {
 
-            const deletedStaff = await pool.query(`DELETE FROM userRoles WHERE staff_id = $1 RETURNING *`, 
+            const deletedStaff = await pool.query(`DELETE FROM staff WHERE staff_id = $1 RETURNING *`, 
             [idToDelete]);
             res.status(200).send(deletedStaff.rows);
             console.log(deletedStaff.rows);
@@ -144,9 +145,9 @@ router.delete('/:id',authStaff,authRole('admin'), async (req, res) => {
 
 router.delete('/',authStaff,authRole('admin'), async (req, res) => {   
     try {
-        const staffToDelete  =  await pool.query(`SELECT * FROM userRoles`);
+        const staffToDelete  =  await pool.query(`SELECT * FROM staff`);
         if(staffToDelete.rows != 0 ) {
-            const deletedStaff = await pool.query(`DELETE FROM userRoles RETURNING *`);
+            const deletedStaff = await pool.query(`DELETE FROM staff RETURNING *`);
             res.status(200).send(deletedStaff.rows);
             console.log(deletedStaff.rows);
         }

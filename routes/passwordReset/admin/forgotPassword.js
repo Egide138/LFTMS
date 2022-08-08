@@ -13,12 +13,12 @@ router.patch('/', async (req, res) => {
     const { email } = req.body;
   
     try {
-      const  user  =  await pool.query(`SELECT * FROM userRoles WHERE email= $1;`, [email]);
+      const  user  =  await pool.query(`SELECT * FROM staff WHERE email= $1;`, [email]);
       if(user.rows.length  ===  0) {
         return res.status(404).json({ error: "Invalid email" });
       } else {
         const resetToken = jwt.sign({ id: user.rows[0].user_id, email: user.rows[0].email }, resetSecret, { expiresIn: '60m' });
-        await pool.query(`UPDATE userRoles SET resetToken = $1 WHERE email = $2`, [ resetToken,email] );
+        await pool.query(`UPDATE staff SET resetPassword = $1 WHERE email = $2`, [ resetToken,email] );
         await sendEmail(email, resetToken);
         res.status(200).json({ message: "Email sent, Check your email"} );
       }

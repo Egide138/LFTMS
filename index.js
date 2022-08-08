@@ -9,8 +9,10 @@ const loginUser = require('./routes/login');
 const flash = require('express-flash');
 const session = require('express-session');
 const helmet = require("helmet");
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
 
-const sampleSubmission = require('./routes/sampleSubmission');
+const sampleSubmission = require('./routes/staffDashboard/sampleSubmission');
 const testReport = require('./routes/testReport');
 const staff = require('./routes/admin');
 const staffLogin = require('./routes/staff');
@@ -18,7 +20,14 @@ const { authUser,authRole,authStaff } = require('./middlewares/auth');
 const requests = require('./routes/request');
 const forgotPassword = require('./routes/passwordReset/users/forgotPassword');
 const resetPassword = require('./routes/passwordReset/users/resetPassword');
+const uploadProfilePic = require('./routes/profilePic');
 
+app.use((req,res,next)=>{ 
+res.setHeader('Access-Control-Allow-Origin','*'); 
+res.setHeader('Access-Control-Allow-Methods','GET,POST,PUT,PATCH,DELETE'); 
+res.setHeader('Access-Control-Allow-Methods','Content-Type','Authorization','json'); 
+next(); 
+})
 app.use(flash());
 app.use(session({
     secret: process.env.SESSION_SECRET,
@@ -35,7 +44,7 @@ app.use(express.urlencoded({extended: false}));
 app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
+app.use(cors());
 
 app.set('view engine', 'ejs');
 
@@ -48,8 +57,7 @@ app.use('/staff/register',staff);
 app.use('/staff/login',staffLogin);
 app.use('/forgot-password',forgotPassword);
 app.use('/reset-password',resetPassword);
-
-
+app.use('/profile/upload',uploadProfilePic);
 
 // Pages
 
@@ -60,7 +68,16 @@ app.get('/', async (req, res) => {
         res.status(400).send('Error: ' + e.message);
         console.log('Error: ' + e.message);
     }
-});      
+}); 
+
+app.get('/profile/upload', async (req, res) => {   
+    try {
+        res.render('profilePic');
+    } catch (e) {
+        res.status(400).send('Error: ' + e.message);
+        console.log('Error: ' + e.message);
+    }
+});  
 
 app.get('/test', async (req, res) => {   
   try {

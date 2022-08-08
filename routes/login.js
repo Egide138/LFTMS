@@ -11,34 +11,34 @@ router.post('/', async (req, res) => {
         const emailRow = await pool.query(`SELECT * FROM reg_users WHERE email= $1;`, [email])
         const user = emailRow.rows;
         if (user.length === 0) {
-            res.status(400).json({
+            return res.status(400).json({
             error: "User is not registered, Sign Up first",
             });
-            console.log("User is not registered, Sign Up first");
+            // console.log("User is not registered, Sign Up first");
         }
         else {
         bcrypt.compare(password, user[0].password, (err, result) => { 
             if (err) {
-            res.status(500).json({
+            return res.status(500).json({
             error: "Server error",
             });
         } 
         else if (result === true) { 
             
             // res.redirect('dashboardPage.ejs')
-            // res.status(200).json({
-            // message: "Signed in successfully",
-            // // token: token
-            // });
+            res.status(200).send({
+            message: "Signed in successfully",
+            // token: token
+            });
             req.session.userId = user[0].user_id;
             req.session.firstName = user[0].firstname;
-            res.redirect('/users/dashboard');
+            // res.redirect('/users/dashboard');
             // console.log(req.session.userId);
-            console.log("Signed in successfully");
+            // console.log("Signed in successfully");
         }
         else {
         
-        if (result != true)
+        if (result !== true)
         res.status(400).json({
         error: "Enter the correct password!",
         });
